@@ -127,9 +127,9 @@ def test_calculate_GHI():
 
 
 if __name__ == "__main__":
-    pass
-    # test_calculate_declination_angle()
-    # test_calculate_azimuth_angle()
-    # test_calculate_GHI()
-    # test_calculate_elevation_angle()
-    # test_calculate_zenith_angle()
+
+    test_calculate_declination_angle()
+    test_calculate_azimuth_angle()
+    test_calculate_GHI()
+    test_calculate_elevation_angle()
+    test_calculate_zenith_angle()
