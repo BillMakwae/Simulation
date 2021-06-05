@@ -47,7 +47,7 @@ class Simulation:
             settings_path = settings_directory / "settings_ASC.json"
         else:
             settings_path = settings_directory / "settings_FSGP.json"
-        
+
         # ----- Load arguments -----
         with open(settings_path) as f:
             args = json.load(f)
@@ -75,9 +75,9 @@ class Simulation:
         self.origin_coord = args['origin_coord']
         self.dest_coord = args['dest_coord']
         self.waypoints = args['waypoints']
-        
+
         # ----- Race type -----
-        
+
         self.race_type = race_type
 
         # ----- Force update flags -----
@@ -117,7 +117,7 @@ class Simulation:
         self.timestamps = np.arange(0, self.simulation_duration + self.tick, self.tick)
 
     @helpers.timeit
-    def run_model(self, speed=np.array([20,20,20,20,20,20,20,20]), plot_results=True, **kwargs):
+    def run_model(self, speed=np.array([20, 20, 20, 20, 20, 20, 20, 20]), plot_results=True, **kwargs):
         """
         Updates the model in tick increments for the entire simulation duration. Returns
         a final battery charge and a distance travelled for this duration, given an
@@ -160,7 +160,7 @@ class Simulation:
 
         # ------- Parse results ---------
         simulation_arrays = result.arrays
-        distances = simulation_arrays[0] 
+        distances = simulation_arrays[0]
         state_of_charge = simulation_arrays[1]
         delta_energy = simulation_arrays[2]
         solar_irradiances = simulation_arrays[3]
@@ -189,7 +189,7 @@ class Simulation:
                               cloud_covers]
             y_label = ["Speed (km/h)", "Distance (km)", "SOC (%)", "Delta energy (J)",
                        "Solar irradiance (W/m^2)", "Wind speeds (km/h)", "Elevation (m)", "Cloud cover (%)"]
-            
+
             self.__plot_graph(arrays_to_plot, y_label)
 
         return distance_travelled
@@ -201,18 +201,22 @@ class Simulation:
 
         maximum_distance = np.abs(self.run_model(res.x))
         print(f"Maximum distance: {maximum_distance:.2f}km\n")
-        
+
     @helpers.timeit
     def optimize(self, *args, **kwargs):
+
+        guess_lower_bound = 20
+        guess_upper_bound = 80
+
         bounds = {
-            'x0': (20, 100),
-            'x1': (20, 100),
-            'x2': (20, 100),
-            'x3': (20, 100),
-            'x4': (20, 100),
-            'x5': (20, 100),
-            'x6': (20, 100),
-            'x7': (20, 100),
+            'x0': (guess_lower_bound, guess_upper_bound),
+            'x1': (guess_lower_bound, guess_upper_bound),
+            'x2': (guess_lower_bound, guess_upper_bound),
+            'x3': (guess_lower_bound, guess_upper_bound),
+            'x4': (guess_lower_bound, guess_upper_bound),
+            'x5': (guess_lower_bound, guess_upper_bound),
+            'x6': (guess_lower_bound, guess_upper_bound),
+            'x7': (guess_lower_bound, guess_upper_bound),
         }
 
         # https://github.com/fmfn/BayesianOptimization
@@ -229,14 +233,15 @@ class Simulation:
         speed_result = np.empty(len(result_params))
         for i in range(len(speed_result)):
             speed_result[i] = result_params[i]
-        
+
         speed_result = helpers.reshape_and_repeat(speed_result, self.simulation_duration)
         speed_result = np.insert(speed_result, 0, 0)
 
         arrays_to_plot = self.__run_simulation_calculations(speed_result).arrays
-        
-        self.__plot_graph([speed_result] + arrays_to_plot, ["Optimized speed array", "Distance (km)", "SOC (%)", "Delta energy (J)",
-                       "Solar irradiance (W/m^2)", "Wind speeds (km/h)", "Elevation (m)", "Cloud cover (%)"]) 
+
+        self.__plot_graph([speed_result] + arrays_to_plot,
+                          ["Optimized speed array", "Distance (km)", "SOC (%)", "Delta energy (J)",
+                           "Solar irradiance (W/m^2)", "Wind speeds (km/h)", "Elevation (m)", "Cloud cover (%)"])
 
         return optimizer.max
 
@@ -315,7 +320,8 @@ class Simulation:
         local_times = adjust_timestamps_to_local_times(self.timestamps, self.time_of_initialization, time_zones)
 
         # only for reference (may be used in the future)
-        local_times_datetime = np.array([datetime.datetime.utcfromtimestamp(local_unix_time) for local_unix_time in local_times])
+        local_times_datetime = np.array(
+            [datetime.datetime.utcfromtimestamp(local_unix_time) for local_unix_time in local_times])
 
         # time_of_day_hour based of UNIX timestamps
         time_of_day_hour = np.array([helpers.hour_from_unix_timestamp(ti) for ti in local_times])
@@ -334,7 +340,7 @@ class Simulation:
 
         # Get the wind speeds at every location
         wind_speeds = get_array_directional_wind_speed(gis_vehicle_bearings, absolute_wind_speeds,
-                                                                    wind_directions)
+                                                       wind_directions)
 
         # Get an array of solar irradiance at every coordinate and time
         solar_irradiances = self.solar_calculations.calculate_array_GHI(self.route_coords[closest_gis_indices],
@@ -346,6 +352,8 @@ class Simulation:
 
         # Implementing day start/end charging (Charge from 7am-9am and 6pm-8pm) for ASC and
         # (Charge from 8am-9am and 6pm-8pm) for FSGP
+        # ASC: 13 Hours of Race Day, 9 Hours of Driving
+
         # Ensuring Car does not move at night
         bool_lis = []
         night_lis = []
@@ -372,7 +380,7 @@ class Simulation:
         motor_consumed_energy = np.logical_and(motor_consumed_energy, not_charge) * motor_consumed_energy
 
         consumed_energy = motor_consumed_energy + lvs_consumed_energy
-        produced_energy = array_produced_energy 
+        produced_energy = array_produced_energy
 
         # net energy added to the battery
         delta_energy = produced_energy - consumed_energy
@@ -424,11 +432,11 @@ class Simulation:
 
         results = SimulationResult()
         results.arrays = [
-            distances, 
-            state_of_charge, 
-            delta_energy, 
-            solar_irradiances, 
-            wind_speeds, 
+            distances,
+            state_of_charge,
+            delta_energy,
+            solar_irradiances,
+            wind_speeds,
             gis_route_elevations_at_each_tick,
             cloud_covers
         ]
