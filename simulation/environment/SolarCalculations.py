@@ -12,6 +12,8 @@ from simulation.common import helpers
 from tqdm import tqdm
 import sys
 
+from simulation.environment.WeatherForecasts import WeatherForecasts
+
 
 class SolarCalculations:
 
@@ -252,9 +254,7 @@ class SolarCalculations:
         zenith_angle = self.calculate_zenith_angle(latitude, longitude,
                                                    time_zone_utc, day_of_year, local_time)
 
-        cloud_cover_correction_factor = 1 - (cloud_cover / 100)
         GHI = DNI * np.cos(np.radians(zenith_angle)) + DHI
-        GHI = cloud_cover_correction_factor * GHI
 
         return GHI
 

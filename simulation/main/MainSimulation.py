@@ -15,6 +15,7 @@ import simulation
 from simulation.common import helpers
 from simulation.common.helpers import adjust_timestamps_to_local_times, get_array_directional_wind_speed
 from simulation.config import settings_directory
+from simulation.environment.WeatherForecasts import WeatherForecasts
 from simulation.main.SimulationResult import SimulationResult
 
 
@@ -414,8 +415,8 @@ class Simulation:
         wind_directions = weather_forecasts[:, 6]
         cloud_covers = weather_forecasts[:, 7]
 
-        # TODO: remove after done with testing
-        cloud_covers = np.zeros_like(cloud_covers)
+        # Enable to remove effect of clouds on irradiance
+        # cloud_covers = np.zeros_like(cloud_covers)
 
         # Get the wind speeds at every location
         wind_speeds = get_array_directional_wind_speed(gis_vehicle_bearings, absolute_wind_speeds,
@@ -426,6 +427,9 @@ class Simulation:
                                                                         time_zones, local_times,
                                                                         gis_route_elevations_at_each_tick,
                                                                         cloud_covers)
+
+        # Factors in cloud coverage to get estimated irradiance
+        solar_irradiances = WeatherForecasts.cloud_cover_to_ghi_linear(cloud_covers, solar_irradiances)
 
         # TLDR: we have now obtained solar irradiances, wind speeds, and gradients at each tick
 

@@ -238,6 +238,29 @@ class WeatherForecasts:
 
         return weather_forecast
 
+    def cloud_cover_to_ghi_linear(cloud_cover, ghi_clear, offset=0.35):
+        """
+        Convert cloud cover to GHI using a linear relationship. Sourced from pvlib/forecast.py
+        https://github.com/pvlib/pvlib-python/blob/c1bbf71fe746fac11a10572a9ffcfa328c642392/pvlib/forecast.py
+
+        0% cloud cover returns ghi_clear.
+        100% cloud cover returns offset*ghi_clear.
+
+        :param cloud_cover: Cloud cover as a float between 0 and 1
+        :param ghi_clear: GHI under clear sky conditions in W/m2
+        :param offset: Determines the minimum GHI, defaults to 0.35
+
+        Returns Estimated GHI in W/m2
+
+        Referenced from : 
+        Larson et. al. "Day-ahead forecasting of solar power output from
+        photovoltaic plants in the American Southwest" Renewable Energy
+        91, 11-20 (2016).
+        """
+        cloud_cover = cloud_cover / 100.
+        ghi = (offset + (1 - offset) * (1 - cloud_cover)) * ghi_clear
+        return ghi
+
     def calculate_closest_weather_indices(self, cumulative_distances):
         current_coordinate_index = 0
         result = []
