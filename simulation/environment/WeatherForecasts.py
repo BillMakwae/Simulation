@@ -246,7 +246,7 @@ class WeatherForecasts:
         0% cloud cover returns ghi_clear.
         100% cloud cover returns offset*ghi_clear.
 
-        :param cloud_cover: Cloud cover as a float between 0 and 1
+        :param cloud_cover: Cloud cover as a percent
         :param ghi_clear: GHI under clear sky conditions in W/m2
         :param offset: Determines the minimum GHI, defaults to 0.35
 
